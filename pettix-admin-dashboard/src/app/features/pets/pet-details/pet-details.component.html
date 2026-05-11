@@ -1,0 +1,407 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6 bg-[#F8FAFC] min-h-screen">
+  <!-- Loading State -->
+  <div *ngIf="loading()"
+    class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-4 text-gray-500 font-medium animate-pulse">Fetching pet details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()"
+    class="bg-red-50 border border-red-100 text-red-700 p-6 rounded-2xl flex items-center space-x-3">
+    <i class="fas fa-exclamation-circle text-2xl"></i>
+    <div>
+      <h3 class="font-bold">Error Loading Profile</h3>
+      <p class="text-sm opacity-90">{{ error() }}</p>
+    </div>
+    <button (click)="loadPetDetails()"
+      class="ml-auto bg-white px-4 py-2 rounded-xl border border-red-200 text-sm font-semibold hover:bg-red-100 transition-colors">
+      Retry
+    </button>
+  </div>
+
+  <!-- Header -->
+  <div class="flex items-center justify-between pb-2">
+    <div class="flex items-center space-x-4">
+      <button (click)="goBack()"
+        class="p-2.5 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200 group bg-white shadow-sm">
+        <i class="fas fa-arrow-left text-gray-500 group-hover:text-primary"></i>
+      </button>
+      <div *ngIf="!loading()">
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Pet Details</h1>
+        <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Management Hub</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Header Card -->
+  <div *ngIf="pet() && !loading()"
+    class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden group">
+    <!-- Decorative background elements -->
+    <div
+      class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary/10 transition-all duration-700">
+    </div>
+
+    <div class="flex flex-col md:flex-row items-start gap-8 relative z-10">
+      <!-- Image & Status -->
+      <div class="relative group/image flex-shrink-0">
+        <div
+          class="w-48 h-48 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl ring-1 ring-gray-100 transition-transform duration-500 group-hover/image:scale-[1.02] relative">
+          <img [src]="pet()?.imageUrls?.[0] || 'https://via.placeholder.com/200?text=Pet'" [alt]="pet()?.name"
+            class="w-full h-full object-cover">
+          <!-- Blocked Overlay -->
+          <div *ngIf="pet()?.isBlocked"
+            class="absolute inset-0 bg-red-600/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span
+              class="bg-red-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Blocked</span>
+          </div>
+        </div>
+        <div
+          class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-4 py-1.5 rounded-full shadow-lg border border-gray-50 flex items-center gap-2 whitespace-nowrap">
+          <span class="w-2.5 h-2.5 rounded-full" [ngClass]="getStatusClass(pet()?.adoptionStatus!)"></span>
+          <span class="text-xs font-black uppercase text-gray-700 tracking-wider">{{
+            getStatusName(pet()?.adoptionStatus!) }}</span>
+        </div>
+      </div>
+
+      <!-- Info & Stats -->
+      <div class="flex-1 w-full pt-2">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <h1 class="text-4xl font-black text-gray-900 tracking-tight">{{ pet()?.name }}</h1>
+              <span class="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg">{{ pet()?.code }}</span>
+            </div>
+            <p class="text-gray-500 flex items-center gap-2 font-medium">
+              <i class="fas fa-paw text-primary"></i>
+              {{ pet()?.categoryName }} • {{ pet()?.genderName }} • {{ pet()?.age }} years old
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <!-- Block/Unblock Button -->
+            <button (click)="toggleBlock()"
+              [ngClass]="pet()?.isBlocked ? 'bg-green-500 hover:shadow-green-500/20' : 'bg-red-600 hover:shadow-red-600/20'"
+              class="text-white px-6 py-3.5 rounded-2xl font-bold hover:shadow-lg active:scale-95 transition-all flex items-center gap-2">
+              <i class="fas" [ngClass]="pet()?.isBlocked ? 'fa-unlock' : 'fa-ban'"></i>
+              {{ pet()?.isBlocked ? 'Unblock' : 'Block' }}
+            </button>
+            <button
+              class="bg-primary text-white px-8 py-3.5 rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all flex items-center gap-2">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          <div
+            class="bg-gray-50 p-4 rounded-2xl border border-gray-100/50 group/stat hover:bg-white hover:shadow-md transition-all duration-300">
+            <span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Color</span>
+            <span class="text-gray-900 font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+              {{ pet()?.colorName || 'N/A' }}
+            </span>
+          </div>
+          <div
+            class="bg-gray-50 p-4 rounded-2xl border border-gray-100/50 group/stat hover:bg-white hover:shadow-md transition-all duration-300">
+            <span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Status</span>
+            <span class="text-gray-900 font-bold">{{ getStatusName(pet()?.adoptionStatus!) }}</span>
+          </div>
+          <div
+            class="bg-gray-50 p-4 rounded-2xl border border-gray-100/50 group/stat hover:bg-white hover:shadow-md transition-all duration-300">
+            <span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Owner</span>
+            <div class="flex items-center gap-2">
+              <img [src]="pet()?.contact?.avatar || 'https://via.placeholder.com/20'"
+                class="w-5 h-5 rounded-full object-cover">
+              <span class="text-gray-900 font-bold truncate">{{ pet()?.contact?.nameEn || 'No Owner' }}</span>
+            </div>
+          </div>
+          <div
+            class="bg-gray-50 p-4 rounded-2xl border border-gray-100/50 group/stat hover:bg-white hover:shadow-md transition-all duration-300">
+            <span class="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Last Action</span>
+            <span class="text-gray-900 font-bold">{{ pet()?.lastAdoptedAt | date }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details/Bio Section inside Header -->
+    <div class="mt-8 pt-8 border-t border-dashed border-gray-200">
+      <p class="text-gray-600 leading-relaxed font-medium">
+        <span class="text-primary font-bold">Bio:</span> {{ pet()?.description }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Content Section with Tabs -->
+  <div *ngIf="pet() && !loading()" class="space-y-6">
+    <!-- Navbar Tabs -->
+    <div class="bg-white px-8 rounded-3xl shadow-sm border border-gray-100">
+      <nav class="flex flex-wrap items-center gap-x-8 border-b border-gray-100">
+        <div (click)="setTab('overview')" class="nav-tab" [class.active]="activeTab() === 'overview'">OVERVIEW</div>
+        <div (click)="setTab('health')" class="nav-tab" [class.active]="activeTab() === 'health'">HEALTH & RECORDS</div>
+        <div (click)="setTab('ownership')" class="nav-tab" [class.active]="activeTab() === 'ownership'">OWNERSHIP
+          HISTORY</div>
+        <div (click)="setTab('forms')" class="nav-tab" [class.active]="activeTab() === 'forms'">ADOPTION FORMS</div>
+        <!-- Reports Tab -->
+        <div (click)="setTab('reports')" class="nav-tab flex items-center gap-2"
+          [class.active]="activeTab() === 'reports'">
+          REPORTS
+          <span *ngIf="pet()?.reportsCount"
+            class="px-1.5 py-0.5 bg-red-100 text-red-600 rounded-md text-[10px] font-black">
+            {{ pet()?.reportsCount }}
+          </span>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Active Tab Content -->
+    <div [ngSwitch]="activeTab()" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+      <!-- OVERVIEW TAB -->
+      <div *ngSwitchCase="'overview'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 space-y-6">
+          <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+            <h3 class="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+              <i class="fas fa-info-circle text-primary"></i> Detailed Description
+            </h3>
+            <div class="prose prose-blue max-w-none text-gray-600 font-medium leading-loose"
+              [innerHTML]="pet()?.details"></div>
+          </div>
+
+          <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+            <h3 class="text-xl font-black text-gray-900 mb-6">Gallery</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div *ngFor="let img of pet()?.imageUrls"
+                class="aspect-square rounded-2xl overflow-hidden group/gallery relative">
+                <img [src]="img"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover/gallery:scale-110">
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover/gallery:opacity-100 transition-opacity flex items-center justify-center">
+                  <i class="fas fa-search-plus text-white text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-200">
+            <h3 class="text-lg font-black text-gray-900 mb-4">Location</h3>
+            <div class="flex items-center gap-3 text-gray-600 mb-4">
+              <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <span class="font-bold">{{ pet()?.location || 'Cairo, Egypt' }}</span>
+            </div>
+            <div
+              class="h-48 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden shrink-0 shadow-inner relative group">
+              <div
+                class="absolute inset-0 bg-black/5 pointer-events-none group-hover:bg-transparent transition-colors duration-300">
+              </div>
+              <iframe [src]="getMapUrl(pet()?.location)" class="w-full h-full border-0" allowfullscreen=""
+                loading="lazy"></iframe>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-8 rounded-[2rem] shadow-sm border border-primary/10 bg-gradient-to-br from-white to-primary/5">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 tracking-tight">Current Owner</h3>
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl border-2 border-white shadow-md overflow-hidden ring-1 ring-gray-100">
+                <img [src]="pet()?.contact?.avatar || 'https://via.placeholder.com/60'"
+                  class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1">
+                <h4 class="font-black text-gray-900">{{ pet()?.contact?.nameEn || 'System Office' }}</h4>
+                <p class="text-xs text-primary font-bold uppercase tracking-wider">{{ pet()?.contact?.email ||
+                  'OFFICIAL' }}</p>
+              </div>
+            </div>
+            <button (click)="goToUser(pet()?.contact?.id)"
+              class="w-full mt-6 bg-white border border-gray-100 py-3 rounded-xl font-bold text-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-user-circle"></i> View Owner Profile
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEALTH TAB -->
+      <div *ngSwitchCase="'health'" class="space-y-6">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+          <h3 class="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
+            <i class="fas fa-hospital-symbol text-red-500"></i> Medical Records & Vaccinations
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div *ngFor="let item of pet()?.vaccinations"
+              class="p-6 rounded-3xl bg-gray-50 border border-gray-100 hover:border-primary/30 transition-all flex items-start gap-4">
+              <div
+                class="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">
+                <i class="fas fa-syringe"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">{{ item.name }}</h4>
+                <p class="text-sm text-gray-500 font-medium">Date Administered: {{ item.vaccinationDate | date }}</p>
+                <span
+                  class="mt-2 text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Verified</span>
+              </div>
+            </div>
+
+            <div *ngIf="!pet()?.vaccinations?.length"
+              class="col-span-full py-12 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+              <i class="fas fa-notes-medical text-3xl mb-3 opacity-20"></i>
+              <p class="font-bold tracking-tight">No medical records found for this pet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OWNERSHIP TAB -->
+      <div *ngSwitchCase="'ownership'"
+        class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex items-center justify-between">
+          <h3 class="text-2xl font-black text-gray-900 tracking-tight">Ownership History</h3>
+          <button
+            class="bg-primary/10 text-primary px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary hover:text-white transition-all">
+            Update Ownership
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/50">
+                <th class="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Action Date</th>
+                <th class="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Previous Owner</th>
+                <th class="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">New Owner</th>
+                <th class="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400">Note / Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let history of pet()?.ownershipHistory"
+                class="border-b border-gray-50 hover:bg-gray-50/30 transition-colors">
+                <td class="px-8 py-6">
+                  <span class="font-bold text-gray-900">{{ history.actionDate | date:'longDate' }}</span>
+                </td>
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-user-circle text-gray-300"></i>
+                    <span class="font-bold text-gray-600">{{ history.previousOwnerName }}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-user-check text-primary"></i>
+                    <span class="font-bold text-gray-900">{{ history.newOwnerName }}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6">
+                  <p
+                    class="text-sm text-gray-500 font-medium leading-relaxed italic max-w-xs transition-all group-hover:text-gray-700">
+                    {{ history.note || 'Transfer of ownership recorded by system.' }}
+                  </p>
+                </td>
+              </tr>
+              <tr *ngIf="!pet()?.ownershipHistory?.length">
+                <td colspan="4" class="px-8 py-20 text-center text-gray-500 font-medium">
+                  <div class="flex flex-col items-center">
+                    <i class="fas fa-history text-3xl mb-3 opacity-20"></i>
+                    <p>Initial registration is the only record for this pet.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FORMS TAB (Placeholders) -->
+      <div *ngSwitchCase="'forms'" class="space-y-6">
+        <div class="grid grid-cols-1 gap-6">
+          <div
+            class="bg-white p-12 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+            <div
+              class="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center text-primary text-3xl mb-6">
+              <i class="fas fa-file-contract"></i>
+            </div>
+            <h3 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">No Adoption History</h3>
+            <p class="text-gray-500 max-w-sm font-medium leading-relaxed">
+              There are no current or previous adoption applications for {{ pet()?.name }} on file.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS TAB -->
+      <div *ngSwitchCase="'reports'" class="space-y-6">
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-8 border-b border-gray-50 flex items-center justify-between">
+            <h3 class="text-2xl font-black text-gray-900 tracking-tight">Community Reports</h3>
+            <span class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-black tracking-tight uppercase">
+              Total: {{ reports().length }}
+            </span>
+          </div>
+
+          <div *ngIf="reportsLoading()" class="p-20 flex flex-col items-center justify-center">
+            <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 text-gray-500 font-bold">Scanning report archives...</p>
+          </div>
+
+          <div *ngIf="!reportsLoading() && reports().length > 0" class="divide-y divide-gray-50">
+            <div *ngFor="let report of reports()" (click)="markReportAsRead(report)" 
+               class="p-8 hover:bg-gray-50/50 transition-colors group cursor-pointer relative">
+               
+               <!-- Unread Dot -->
+               <div *ngIf="!report.isRead" class="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+
+               <div class="flex items-start justify-between">
+                 <div class="flex items-start gap-4">
+                   <div
+                     class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0"
+                     [class.animate-pulse]="!report.isRead">
+                     <i class="fas fa-flag"></i>
+                   </div>
+                   <div>
+                     <div class="flex items-center gap-3 mb-1">
+                       <h4 class="font-black text-gray-900 text-lg group-hover:text-red-600 transition-colors"
+                           [class.text-blue-600]="!report.isRead">
+                         {{ report.reasonName }}
+                       </h4>
+                       <span class="text-gray-400 font-bold text-sm">•</span>
+                       <span class="text-gray-400 font-bold text-sm uppercase tracking-widest">{{ report.creationDate |
+                         date:'medium' }}</span>
+                     </div>
+                     <p class="text-gray-600 font-medium leading-relaxed mb-4 italic" *ngIf="report.customReason">
+                       "{{ report.customReason }}"
+                     </p>
+                     <div class="flex items-center gap-2">
+                       <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Reported By:</span>
+                       <span
+                         class="px-2 py-1 bg-gray-100 text-gray-700 text-[10px] font-black rounded-lg uppercase tracking-widest cursor-pointer hover:bg-primary/10 hover:text-primary transition-all">
+                         {{ report.authorName }}
+                       </span>
+                     </div>
+                   </div>
+                 </div>
+                 <button (click)="toggleBlock(); $event.stopPropagation()"
+                   class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm">
+                   Moderate
+                 </button>
+               </div>
+            </div>
+          </div>
+
+          <div *ngIf="!reportsLoading() && reports().length === 0" class="p-20 text-center flex flex-col items-center">
+            <div
+              class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-500 text-3xl mb-4">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4 class="text-xl font-black text-gray-900 mb-1">Clear Record</h4>
+            <p class="text-gray-500 font-medium">No community reports found for this animal.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
