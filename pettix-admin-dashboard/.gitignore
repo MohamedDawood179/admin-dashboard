@@ -1,0 +1,15 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Angular
+.angular/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Deployment
+node_modules/.cache/gh-pages
