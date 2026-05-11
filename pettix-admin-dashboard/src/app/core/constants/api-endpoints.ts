@@ -1,4 +1,4 @@
-const BASE_URL = 'https://localhost:7242';
+const BASE_URL = 'https://pettix-production.up.railway.app';
 const AUTH_BASE = `${BASE_URL}/api/Security/Authentication`;
 const DASHBOARD_BASE = `${BASE_URL}/api/Dashboards/AdminDashboard`;
 const USERS_BASE = `${BASE_URL}/api/Security/Users`;

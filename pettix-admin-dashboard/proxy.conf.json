@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://localhost:7242",
+    "target": "https://pettix-production.up.railway.app",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
